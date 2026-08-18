@@ -64,4 +64,25 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function logout(Request $request): JsonResponse
+    {
+        try {
+            DB::transaction(function () use ($request) {
+                $request->user()->currentAccessToken()?->delete();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logout successful.',
+            ]);
+        } catch (Throwable $exception) {
+            Log::error('Logout failed.', ['exception' => $exception]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to log out right now. Please try again.',
+            ], 500);
+        }
+    }
 }

@@ -55,7 +55,24 @@ Wrong credentials:
 }
 ```
 
-## 2. List products
+## 2. Logout
+
+```http
+POST /api/v1/logout
+```
+
+Hakuna payload. Token iliyotumika kwenye request ndiyo itafutwa.
+
+Response:
+
+```json
+{
+  "success": true,
+  "message": "Logout successful."
+}
+```
+
+## 3. List products
 
 ```http
 GET /api/v1/products
@@ -89,7 +106,7 @@ Response:
 
 `active_time` inakuwa `active` kama `time_passed` ni zaidi ya dakika 30, vinginevyo ni `inactive`.
 
-## 3. Rate a product
+## 4. Rate a product
 
 ```http
 POST /api/v1/products/{productId}/rating
@@ -143,7 +160,7 @@ Response kama rating ilikuwepo:
 }
 ```
 
-## 4. Change a rating
+## 5. Change a rating
 
 ```http
 PUT /api/v1/products/{productId}/rating
@@ -179,7 +196,7 @@ Response:
 }
 ```
 
-## 5. Remove a rating
+## 6. Remove a rating
 
 ```http
 DELETE /api/v1/products/{productId}/rating
@@ -202,7 +219,7 @@ Response:
 }
 ```
 
-## 6. Register a patient
+## 7. Register a patient
 
 ```http
 POST /api/v1/patients/register
