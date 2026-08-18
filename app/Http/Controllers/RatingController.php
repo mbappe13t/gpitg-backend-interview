@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\UserRating;
+use App\Traits\ResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Throwable;
 
 class RatingController extends Controller
 {
+    use ResponseTrait;
+
     public function index(Request $request): JsonResponse
     {
         try {
@@ -43,18 +46,11 @@ class RatingController extends Controller
                     ];
                 });
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Products retrieved successfully.',
-                'data' => $products,
-            ]);
+            return $this->successResponse('Products retrieved successfully.', $products);
         } catch (Throwable $exception) {
             Log::error('Products could not be retrieved.', ['exception' => $exception]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to retrieve products right now.',
-            ], 500);
+            return $this->errorResponse('Unable to retrieve products right now.', 500);
         }
     }
 
@@ -86,13 +82,13 @@ class RatingController extends Controller
                 );
             });
 
-            return response()->json([
-                'success' => true,
-                'message' => $rating->wasRecentlyCreated
+            return $this->successResponse(
+                $rating->wasRecentlyCreated
                     ? 'Product rated successfully.'
                     : 'Your existing rating was updated.',
-                'data' => $rating,
-            ], $rating->wasRecentlyCreated ? 201 : 200);
+                $rating,
+                $rating->wasRecentlyCreated ? 201 : 200
+            );
         } catch (Throwable $exception) {
             return $this->serverError($exception);
         }
@@ -117,10 +113,7 @@ class RatingController extends Controller
                 ->first();
 
             if (! $rating) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You have not rated this product yet.',
-                ], 404);
+                return $this->errorResponse('You have not rated this product yet.', 404);
             }
 
             DB::transaction(function () use ($request, $rating) {
@@ -130,11 +123,7 @@ class RatingController extends Controller
                 ]);
             });
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Rating updated successfully.',
-                'data' => $rating->fresh(),
-            ]);
+            return $this->successResponse('Rating updated successfully.', $rating->fresh());
         } catch (Throwable $exception) {
             return $this->serverError($exception);
         }
@@ -153,18 +142,12 @@ class RatingController extends Controller
                 ->first();
 
             if (! $rating) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You have not rated this product yet.',
-                ], 404);
+                return $this->errorResponse('You have not rated this product yet.', 404);
             }
 
             DB::transaction(fn () => $rating->delete());
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Rating removed successfully.',
-            ]);
+            return $this->successResponse('Rating removed successfully.');
         } catch (Throwable $exception) {
             return $this->serverError($exception);
         }
@@ -179,28 +162,22 @@ class RatingController extends Controller
 
     private function validationError(array $errors): JsonResponse
     {
-        return response()->json([
-            'success' => false,
-            'message' => 'The rating must be a whole number between 1 and 5.',
-            'errors' => $errors,
-        ], 422);
+        return $this->errorResponse(
+            'The rating must be a whole number between 1 and 5.',
+            422,
+            $errors
+        );
     }
 
     private function productNotFound(): JsonResponse
     {
-        return response()->json([
-            'success' => false,
-            'message' => 'Product not found.',
-        ], 404);
+        return $this->errorResponse('Product not found.', 404);
     }
 
     private function serverError(Throwable $exception): JsonResponse
     {
         Log::error('Rating request failed.', ['exception' => $exception]);
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Unable to process the rating right now.',
-        ], 500);
+        return $this->errorResponse('Unable to process the rating right now.', 500);
     }
 }

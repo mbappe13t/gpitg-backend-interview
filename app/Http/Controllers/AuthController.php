@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Traits\ResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Throwable;
 
 class AuthController extends Controller
 {
+    use ResponseTrait;
+
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -21,31 +24,27 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please check the submitted details.',
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->errorResponse(
+                'Please check the submitted details.',
+                422,
+                $validator->errors()
+            );
         }
 
         try {
             $user = User::query()->where('email', $request->email)->first();
 
             if (! $user || ! Hash::check($request->password, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The email or password is incorrect.',
-                ], 401);
+                return $this->errorResponse('The email or password is incorrect.', 401);
             }
 
             $token = DB::transaction(
                 fn () => $user->createToken('api-token')->plainTextToken
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Login successful.',
-                'data' => [
+            return $this->successResponse(
+                'Login successful.',
+                [
                     'user' => [
                         'id' => $user->id,
                         'name' => $user->name,
@@ -53,15 +52,15 @@ class AuthController extends Controller
                     ],
                     'token' => $token,
                     'token_type' => 'Bearer',
-                ],
-            ]);
+                ]
+            );
         } catch (Throwable $exception) {
             Log::error('Login failed.', ['exception' => $exception]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to log in right now. Please try again.',
-            ], 500);
+            return $this->errorResponse(
+                'Unable to log in right now. Please try again.',
+                500
+            );
         }
     }
 
@@ -72,17 +71,14 @@ class AuthController extends Controller
                 $request->user()->currentAccessToken()?->delete();
             });
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Logout successful.',
-            ]);
+            return $this->successResponse('Logout successful.');
         } catch (Throwable $exception) {
             Log::error('Logout failed.', ['exception' => $exception]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to log out right now. Please try again.',
-            ], 500);
+            return $this->errorResponse(
+                'Unable to log out right now. Please try again.',
+                500
+            );
         }
     }
 }

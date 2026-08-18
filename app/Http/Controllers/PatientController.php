@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\ResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -11,6 +12,8 @@ use Throwable;
 
 class PatientController extends Controller
 {
+    use ResponseTrait;
+
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -28,11 +31,11 @@ class PatientController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please check the patient details.',
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->errorResponse(
+                'Please check the patient details.',
+                422,
+                $validator->errors()
+            );
         }
 
         try {
@@ -51,10 +54,10 @@ class PatientController extends Controller
                     'status' => $response->status(),
                 ]);
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The hospital service could not register the patient.',
-                ], 502);
+                return $this->errorResponse(
+                    'The hospital service could not register the patient.',
+                    502
+                );
             }
 
             $checkInDateTime = $response->json('Check_In_Date_And_Time');
@@ -62,26 +65,26 @@ class PatientController extends Controller
             if (! $checkInDateTime) {
                 Log::warning('Gpitg registration response did not include check-in time.');
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The patient was registered, but no check-in time was returned.',
-                ], 502);
+                return $this->errorResponse(
+                    'The patient was registered, but no check-in time was returned.',
+                    502
+                );
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Patient registered successfully.',
-                'data' => [
+            return $this->successResponse(
+                'Patient registered successfully.',
+                [
                     'Check_In_Date_And_Time' => $checkInDateTime,
                 ],
-            ], 201);
+                201
+            );
         } catch (Throwable $exception) {
             Log::error('Gpitg patient registration failed.', ['exception' => $exception]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to reach the hospital service right now.',
-            ], 502);
+            return $this->errorResponse(
+                'Unable to reach the hospital service right now.',
+                502
+            );
         }
     }
 }
