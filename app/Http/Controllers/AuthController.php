@@ -16,6 +16,7 @@ class AuthController extends Controller
 {
     use ResponseTrait;
 
+    # Log a user into the system.
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -64,6 +65,7 @@ class AuthController extends Controller
         }
     }
 
+    # Log the current user out of the system.
     public function logout(Request $request): JsonResponse
     {
         try {

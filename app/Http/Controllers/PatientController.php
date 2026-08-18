@@ -14,6 +14,7 @@ class PatientController extends Controller
 {
     use ResponseTrait;
 
+    # Register a patient with Gpitg Hospital.
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

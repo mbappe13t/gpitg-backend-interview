@@ -16,6 +16,7 @@ class RatingController extends Controller
 {
     use ResponseTrait;
 
+    # List products together with their rating details.
     public function index(Request $request): JsonResponse
     {
         try {
@@ -54,6 +55,7 @@ class RatingController extends Controller
         }
     }
 
+    # Create or replace the current user's product rating.
     public function store(Request $request, int $productId): JsonResponse
     {
         $validator = $this->ratingValidator($request);
@@ -94,6 +96,7 @@ class RatingController extends Controller
         }
     }
 
+    # Change the current user's existing product rating.
     public function update(Request $request, int $productId): JsonResponse
     {
         $validator = $this->ratingValidator($request);
@@ -129,6 +132,7 @@ class RatingController extends Controller
         }
     }
 
+    # Remove the current user's product rating.
     public function destroy(Request $request, int $productId): JsonResponse
     {
         try {
@@ -153,6 +157,7 @@ class RatingController extends Controller
         }
     }
 
+    # Check that a rating is a whole number from 1 to 5.
     private function ratingValidator(Request $request)
     {
         return Validator::make($request->all(), [
@@ -160,6 +165,7 @@ class RatingController extends Controller
         ]);
     }
 
+    # Handle invalid rating details.
     private function validationError(array $errors): JsonResponse
     {
         return $this->errorResponse(
@@ -169,11 +175,13 @@ class RatingController extends Controller
         );
     }
 
+    # Handle a product that does not exist.
     private function productNotFound(): JsonResponse
     {
         return $this->errorResponse('Product not found.', 404);
     }
 
+    # Handle an unexpected rating error.
     private function serverError(Throwable $exception): JsonResponse
     {
         Log::error('Rating request failed.', ['exception' => $exception]);
