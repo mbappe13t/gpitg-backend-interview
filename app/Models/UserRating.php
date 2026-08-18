@@ -33,7 +33,7 @@ class UserRating extends Model
     {
         return [
             'rating' => 'integer',
-            'rating_datetime' => 'datetime',
+            'rating_datetime' => 'datetime:Y-m-d H:i:s',
         ];
     }
 }
